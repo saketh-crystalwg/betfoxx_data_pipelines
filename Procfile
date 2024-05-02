@@ -1,0 +1,1 @@
+worker: python txns_pipeline.py
