@@ -64,6 +64,10 @@ txn_entities = txn_response_data['ResponseObject']['PaymentRequests']['Entities'
 
 txns = pd.DataFrame(txn_entities)
 
+txn_date = datetime.today() - timedelta(1)
+
+txn_date_1  = txn_date.strftime('%Y-%m-%d')
+
 txns['Status'] = ['Approved' if x == 8 \
                   else 'ApprovedManually' if x == 12 \
                   else 'Cancelled' if x == 2 \
