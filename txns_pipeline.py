@@ -40,7 +40,7 @@ end_day = datetime(date_1.year, date_1.month, date_1.day, 0, 0, 0)
 
 end_time = end_day.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
-txn_url = 'https://adminwebapi.iqsoftllc.com/api/Main/ApiRequest?TimeZone=4&LanguageId=en'
+txn_url = 'https://adminwebapi.iqsoftllc.com/api/Main/ApiRequest?TimeZone=0&LanguageId=en'
 
 txn_data = {"Controller":"PaymentSystem",
             "Method":"GetPaymentRequestsPaging",
