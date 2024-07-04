@@ -53,7 +53,7 @@ txn_data = {"Controller":"PaymentSystem",
                 "FieldNameToOrderBy":"",
                 "Type":2,
                 "HasNote":False,
-                "FromDate":"2024-01-01T00:00:00.000Z","ToDate":end_time},
+                "FromDate":"2024-01-01T00:00:00.000Z","ToDate":"2024-07-04T00:00:00.000Z"},
             "UserId":"1780","ApiKey":"betfoxx_api_key"}
 
 txn_response = requests.post(txn_url, json=txn_data)
@@ -84,6 +84,23 @@ txns['Status'] = ['Approved' if x == 8 \
                   else 'Splitted' if x == 15 \
                   else 'Waiting For KYC' if x == 5 \
                   else 'NA' for x in txns['State']]
+
+txns['Payment_Method'] = ['InternationalPSP' if x == 326 \
+                                       else 'NOWPay' if x == 147 \
+                                       else 'XcoinsPayCard' if x == 324 \
+                                       else 'XcoinsPayCrypto' if x == 323 \
+                                       else 'Omer' if x == 345 \
+                                       else 'PayOpPIX' if x == 160 \
+                                       else 'PayOpNeosurf' if x == 159 \
+                                       else 'PayOpNeosurfUK' if x == 347 \
+                                       else 'PayOpBankAT' if x == 352 \
+                                       else 'PayOpRevolut' if x == 161 \
+                                       else 'PayOPInterac' if x == 348 \
+                                       else 'PayOpCashToCode' if x == 350 \
+                                       else 'PayOpRevolutUK' if x == 356 \
+                                       else 'PayOpBankUK' if x == 353 \
+                                       else 'PayOpMonzo' if x == 349 \
+                                       else 'Others' for x in txns['PaymentSystemId']]
 
 row_count = txns.shape[0]
 
