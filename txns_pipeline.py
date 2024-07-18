@@ -32,13 +32,20 @@ password = "xjyb jsdl buri ylqr"
 
 # Get yesterday's date
 
-date_1 = datetime.today() - timedelta(0)
+end = datetime.today() - timedelta(0)
 
-end_day = datetime(date_1.year, date_1.month, date_1.day, 0, 0, 0)
+start = datetime.today() - timedelta(1)
+
+end_day = datetime(end.year, end.month, end.day, 0, 0, 0)
+
+start_day = datetime(start.year, start.month, start.day, 0, 0, 0)
 
 # Format the datetime object into the desired string format
 
 end_time = end_day.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+
+start_time = start_day.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+
 
 txn_url = 'https://adminwebapi.iqsoftllc.com/api/Main/ApiRequest?TimeZone=0&LanguageId=en'
 
@@ -53,7 +60,7 @@ txn_data = {"Controller":"PaymentSystem",
                 "FieldNameToOrderBy":"",
                 "Type":2,
                 "HasNote":False,
-                "FromDate":"2024-01-01T00:00:00.000Z","ToDate":"2024-07-04T00:00:00.000Z"},
+                "FromDate":start_time,"ToDate":end_time},
             "UserId":"1780","ApiKey":"betfoxx_api_key"}
 
 txn_response = requests.post(txn_url, json=txn_data)
@@ -101,16 +108,79 @@ txns['Payment_Method'] = ['InternationalPSP' if x == 326 \
                                        else 'PayOpBankUK' if x == 353 \
                                        else 'PayOpMonzo' if x == 349 \
                                        else 'Others' for x in txns['PaymentSystemId']]
+                                       
+## Game Summaries
+gs_url = 'https://adminwebapi.iqsoftllc.com/api/Main/ApiRequest?TimeZone=0&LanguageId=en'
 
-row_count = txns.shape[0]
+gs_data = {
+  "Controller": "Dashboard",
+  "Method": "GetBetsInfo",
+  "RequestObject": {
+    "Controller": "Dashboard",
+    "Method": "GetBetsInfo",
+    "Loading": False,
+    "FromDate": start_time,
+    "ToDate": end_time
+  },
+  "UserId": "1780",
+  "ApiKey": "betfoxx_api_key",
+  "Loading": False
+}
+
+gs_response = requests.post(gs_url, json=gs_data)
+
+gs_response_data = gs_response.json()
+
+gs_entities = gs_response_data['ResponseObject']['DailyInfo']
+
+game_summaries = pd.DataFrame(gs_entities)
+
+game_summaries['Date'] = pd.to_datetime(game_summaries['Date'], errors='coerce')
+
+game_summaries['Date'] = game_summaries['Date'].dt.date
+
+## Customers
+
+cust_url = 'https://adminwebapi.iqsoftllc.com/api/Main/ApiRequest?TimeZone=0&LanguageId=en'
+
+cust_data = {
+    "Controller": "Client",
+    "Method": "GetClients",
+    "RequestObject": {
+        "Controller": "Client",
+        "Method": "GetClients",
+        "SkipCount": 0,
+        "TakeCount": 9999,
+        "OrderBy": None,
+        "FieldNameToOrderBy": "",
+        "CreatedFrom": start_time,
+        "CreatedBefore": end_time
+    },
+    "UserId": "1780",
+    "ApiKey": "betfoxx_api_key"
+}
+
+cust_response = requests.post(cust_url, json=cust_data)
+
+cust_response_data = cust_response.json()
+
+cust_entities = cust_response_data['ResponseObject']['Entities']
+
+customers = pd.DataFrame(cust_entities)
 
 try:
     engine = create_engine('postgresql://orpctbsqvqtnrx:530428203217ce11da9eb9586a5513d0c7fe08555c116c103fd43fb78a81c944@ec2-34-202-53-101.compute-1.amazonaws.com:5432/d46bn1u52baq92',\
                            echo = False)
-    txns.to_sql('customer_transactions_betfoxx', con = engine, if_exists='replace')
+    txns.to_sql('customer_transactions_betfoxx', con = engine, if_exists='append')
     
-    subject = f'Betfoxx Transactions data ingestion for {txn_date_1} is Successful'
-    body = f"Betfoxx Transactions data ingestion for {txn_date_1} is Successful and have ingested {row_count} records"
+    game_summaries.to_sql('game_summaries_day_level', con = engine, if_exists='append')
+    
+    customers.to_sql('customers_betfoxx', con = engine, if_exists='append')
+    
+    subject = f'Betfoxx data ingestion for {txn_date_1} is Successful'
+    
+    body = f"Betfoxx data ingestion for {txn_date_1} is Successful\n"
+    
     send_mail(sender, recipients, subject,body, "smtp.gmail.com", 465,sender,password)
 except Exception as ex:
     subject = f'Betfoxx Transactions data ingestion for {txn_date_1} is Failed'
