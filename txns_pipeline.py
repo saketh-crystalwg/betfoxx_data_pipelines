@@ -108,6 +108,66 @@ txns['Payment_Method'] = ['InternationalPSP' if x == 326 \
                                        else 'PayOpBankUK' if x == 353 \
                                        else 'PayOpMonzo' if x == 349 \
                                        else 'Others' for x in txns['PaymentSystemId']]
+
+wthdrl_data = {
+  "Controller": "PaymentSystem",
+  "Method": "GetPaymentRequestsPaging",
+  "RequestObject": {
+    "Controller": "PaymentSystem",
+    "Method": "GetPaymentRequestsPaging",
+    "SkipCount": 0,
+    "TakeCount": 9999,
+    "OrderBy": 0,
+    "FieldNameToOrderBy": "ClientId",
+    "Type": 1,
+    "HasNote": False,
+    "FromDate": start_time,
+    "ToDate": end_time
+  },
+  "UserId":"1780","ApiKey":"betfoxx_api_key"}
+  
+wthdrl_response = requests.post(txn_url, json=wthdrl_data)
+
+wthdrl_response_data = wthdrl_response.json()
+
+wthdrl_entities = wthdrl_response_data['ResponseObject']['PaymentRequests']['Entities']
+
+wthdrls = pd.DataFrame(wthdrl_entities)
+
+wthdrls['Status'] = ['Approved' if x == 8 \
+                  else 'ApprovedManually' if x == 12 \
+                  else 'Cancelled' if x == 2 \
+                  else 'CancelPending' if x == 14 \
+                  else 'Confirmed' if x == 7 \
+                  else 'Declined' if x == 6 \
+                  else 'Deleted' if x == 11 \
+                  else 'Expired' if x == 13 \
+                  else 'Failed' if x == 9 \
+                  else 'Frozen' if x == 4 \
+                  else 'InProcess' if x == 3 \
+                  else 'Pay Pending' if x == 10 \
+                  else 'Pending' if x == 1 \
+                  else 'Splitted' if x == 15 \
+                  else 'Waiting For KYC' if x == 5 \
+                  else 'NA' for x in wthdrls['State']]
+
+wthdrls['Payment_Method'] = ['InternationalPSP' if x == 326 \
+                                       else 'NOWPay' if x == 147 \
+                                       else 'XcoinsPayCard' if x == 324 \
+                                       else 'XcoinsPayCrypto' if x == 323 \
+                                       else 'Omer' if x == 345 \
+                                       else 'PayOpPIX' if x == 160 \
+                                       else 'PayOpNeosurf' if x == 159 \
+                                       else 'PayOpNeosurfUK' if x == 347 \
+                                       else 'PayOpBankAT' if x == 352 \
+                                       else 'PayOpRevolut' if x == 161 \
+                                       else 'PayOPInterac' if x == 348 \
+                                       else 'PayOpCashToCode' if x == 350 \
+                                       else 'PayOpRevolutUK' if x == 356 \
+                                       else 'PayOpBankUK' if x == 353 \
+                                       else 'PayOpMonzo' if x == 349 \
+                                       else 'Others' for x in wthdrls['PaymentSystemId']]
+  
                                        
 ## Game Summaries
 gs_url = 'https://adminwebapi.iqsoftllc.com/api/Main/ApiRequest?TimeZone=0&LanguageId=en'
@@ -172,6 +232,8 @@ try:
     engine = create_engine('postgresql://orpctbsqvqtnrx:530428203217ce11da9eb9586a5513d0c7fe08555c116c103fd43fb78a81c944@ec2-34-202-53-101.compute-1.amazonaws.com:5432/d46bn1u52baq92',\
                            echo = False)
     txns.to_sql('customer_transactions_betfoxx', con = engine, if_exists='append')
+    
+    wthdrls.to_sql('customer_transactions_betfoxx', con = engine, if_exists='append')
     
     game_summaries.to_sql('game_summaries_day_level', con = engine, if_exists='append')
     
