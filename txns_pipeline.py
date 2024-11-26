@@ -228,6 +228,36 @@ cust_entities = cust_response_data['ResponseObject']['Entities']
 
 customers = pd.DataFrame(cust_entities)
 
+##Game summaries cust level
+
+rev_url = 'https://adminwebapi.iqsoftllc.com/api/Main/ApiRequest?TimeZone=0&LanguageId=en'
+
+rev_data = {
+  "Controller": "Dashboard",
+  "Method": "GetClientsInfoList",
+  "RequestObject": {
+    "Controller": "Dashboard",
+    "Method": "GetClientsInfoList",
+    "SkipCount": 0,
+    "TakeCount": 9999,
+    "FieldNameToOrderBy": "",
+    "FromDate": start_time,
+    "ToDate": end_time
+  },
+  "UserId":"1780","ApiKey":"betfoxx_api_key"
+}
+
+rev_response = requests.post(rev_url, json=rev_data)
+
+rev_response_data = rev_response.json()
+
+rev_entities = rev_response_data['ResponseObject']['Clients']['Entities']
+
+revs = pd.DataFrame(rev_entities)
+
+revs['summary_day'] = start_day.strftime('%Y-%m-%d')
+
+
 try:
     engine = create_engine('postgresql://u24oms6hlf95tc:pc754b964184cc5affbc1d688ffa420767bb6f85f7f24f759c924b3fd125d46dd@c6m929eht211hc.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com/d5t2ohqpj43jns',\
                            echo = False)
@@ -238,6 +268,8 @@ try:
     game_summaries.to_sql('game_summaries_day_level', con = engine, if_exists='append')
     
     customers.to_sql('customers_betfoxx', con = engine, if_exists='append')
+    
+    revs.to_sql('customers_game_summaries_betfoxx', con = engine, if_exists='append')
     
     subject = f'Betfoxx data ingestion for {txn_date_1} is Successful'
     
