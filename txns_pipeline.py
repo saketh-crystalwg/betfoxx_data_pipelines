@@ -257,6 +257,31 @@ revs = pd.DataFrame(rev_entities)
 
 revs['summary_day'] = start_day.strftime('%Y-%m-%d')
 
+games_data = {
+    "Controller": "Report",
+    "Method": "GetReportByClientsGamesPaging",
+    "RequestObject": {
+    "Controller": "Report",
+    "Method": "GetReportByClientsGamesPaging",
+    "SkipCount": 0,
+    "TakeCount": 9999,
+    "FieldNameToOrderBy": "",
+    "ToDate": end_time,
+    "FromDate": start_time
+    },
+    "UserId":"1780","ApiKey":"betfoxx_api_key"
+}
+
+games_response = requests.post(txn_url, json=games_data)
+
+games_response_data = games_response.json()
+
+games_entities = games_response_data['ResponseObject']['Entities']
+
+games = pd.DataFrame(games_entities)
+    
+games['summary_day'] = start_day.strftime('%Y-%m-%d')
+
 
 try:
     engine = create_engine('postgresql://u24oms6hlf95tc:pc754b964184cc5affbc1d688ffa420767bb6f85f7f24f759c924b3fd125d46dd@c6m929eht211hc.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com/d5t2ohqpj43jns',\
@@ -270,6 +295,8 @@ try:
     customers.to_sql('customers_betfoxx', con = engine, if_exists='append')
     
     revs.to_sql('customers_game_summaries_betfoxx', con = engine, if_exists='append')
+    
+    games.to_sql('customers_bets_count_games_day_level', con = engine, if_exists='append')
     
     subject = f'Betfoxx data ingestion for {txn_date_1} is Successful'
     
