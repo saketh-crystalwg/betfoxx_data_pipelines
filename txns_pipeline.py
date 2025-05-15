@@ -257,6 +257,8 @@ revs = pd.DataFrame(rev_entities)
 
 revs['summary_day'] = start_day.strftime('%Y-%m-%d')
 
+revs = revs.drop(columns=['State'])
+
 games_data = {
     "Controller": "Report",
     "Method": "GetReportByClientsGamesPaging",
